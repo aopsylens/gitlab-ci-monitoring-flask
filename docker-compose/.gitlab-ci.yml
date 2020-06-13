@@ -1,0 +1,16 @@
+variables:
+  USER: nevergetaccess
+  APP_DIR: docker-services
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  before_script:
+    - sudo rm -rf /home/$USER/$APP_DIR.old
+    - sudo mv /home/$USER/$APP_DIR /home/$USER/$APP_DIR.old
+    - sudo mv $APP_DIR /home/$USER/
+  script:
+    - sudo docker-compose -f /home/$USER/$APP_DIR/docker-compose.yml build --no-cache
+    - sudo docker-compose -f /home/$USER/$APP_DIR/docker-compose.yml up -d

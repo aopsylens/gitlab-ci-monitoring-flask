@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn test
+After=network.target
+
+[Service]
+User=nevergetaccess
+WorkingDirectory=/home/nevergetaccess/test
+Environment="PATH=/home/nevergetaccess/test/env/bin"
+ExecStart=/home/nevergetaccess/test/env/bin/gunicorn --bind unix:test.sock wsgi:app
+
+[Install]
+WantedBy=multi-user.target

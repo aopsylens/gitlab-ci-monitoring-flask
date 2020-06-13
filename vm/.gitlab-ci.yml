@@ -1,0 +1,20 @@
+variables:
+  USER: nevergetaccess
+  APP_DIR: test
+
+stages:
+  - deploy
+  
+deploy:
+  stage: deploy
+  before_script:
+    - sudo rm -rf /home/$USER/$APP_DIR.old
+    - sudo mv /home/$USER/$APP_DIR /home/$USER/$APP_DIR.old
+    - sudo mv $APP_DIR /home/$USER/
+  script:
+    - sudo /usr/local/bin/virtualenv /home/$USER/$APP_DIR/env 
+    - source /home/$USER/$APP_DIR/env/bin/activate
+    - sudo chown -R gitlab-runner. /home/$USER/$APP_DIR/env
+    - pip install -r /home/$USER/$APP_DIR/requirements.txt
+    - sudo chown -R $USER. /home/$USER/$APP_DIR
+    - sudo systemctl restart test

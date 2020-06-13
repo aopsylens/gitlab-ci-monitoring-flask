@@ -1,0 +1,21 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  before_script:
+    - COMMIT=$(git rev-parse --short HEAD)
+    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+  script:
+    - docker build -t $DOCKER_USER/$CONTAINER_NAME:$COMMIT .
+    - docker push $DOCKER_USER/$CONTAINER_NAME:$COMMIT
+
+deploy:
+  stage: deploy
+  before_script:
+    - COMMIT=$(git rev-parse --short HEAD)
+    - oc login $OC_URL --token=$OC_TOKEN --insecure-skip-tls-verify
+  script:
+    - sed -i "s/COMMIT/$(echo "${COMMIT}")/" services/web/web-deployment.yaml
+    - oc apply -f services/web/web-deployment.yaml
