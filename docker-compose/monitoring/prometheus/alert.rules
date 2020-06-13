@@ -1,0 +1,96 @@
+groups:
+- name: targets
+  rules:
+  - alert: monitor_service_down
+    expr: up == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "Monitor service non-operational"
+      description: "Service {{ $labels.instance }} is down."
+
+- name: host
+  rules:
+  - alert: high_cpu_load
+    expr: node_load1 > 1.5
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "Server under high load"
+      description: "Docker host is under high load, the avg load 1m is at {{ $value}}. Reported by instance {{ $labels.instance }} of job {{ $labels.job }}."
+
+  - alert: high_memory_load
+    expr: (sum(node_memory_MemTotal_bytes) - sum(node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes) ) / sum(node_memory_MemTotal_bytes) * 100 > 85
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "Server memory is almost full"
+      description: "Docker host memory usage is {{ humanize $value}}%. Reported by instance {{ $labels.instance }} of job {{ $labels.job }}."
+
+  - alert: high_storage_load
+    expr: (node_filesystem_size_bytes{fstype="aufs"} - node_filesystem_free_bytes{fstype="aufs"}) / node_filesystem_size_bytes{fstype="aufs"}  * 100 > 85
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "Server storage is almost full"
+      description: "Docker host storage usage is {{ humanize $value}}%. Reported by instance {{ $labels.instance }} of job {{ $labels.job }}."
+
+- name: containers
+  rules:
+  - alert: web_down
+    expr: absent(container_memory_usage_bytes{name="web"})
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "web down"
+      description: "web container is down for more than 30 seconds."
+
+  - alert: web_high_cpu
+    expr: sum(rate(container_cpu_usage_seconds_total{name="web"}[1m])) / count(node_cpu_seconds_total{mode="system"}) * 100 > 10
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "web high CPU usage"
+      description: "web CPU usage is {{ humanize $value}}%."
+
+  - alert: web_high_memory
+    expr: sum(container_memory_usage_bytes{name="web"}) > 1200000000
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "web high memory usage"
+      description: "web memory consumption is at {{ humanize $value}}."
+
+  - alert: nginx_is_running
+    expr: nginx_up == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "Critical: Nginx is down on the host {{ $labels.instance }}."
+      description: "Nginx has been down for more than 30 seconds"
+ 
+  - alert: nginx_not_all_connections_are_handled
+    expr: rate (nginx_connections_handled{job="nginx-exporter"}[5m]) / rate (nginx_connections_accepted{job="nginx-exporter"}[5m]) <1 
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      description: "Critical: Nginx does not handle all accept connections on the host {{ $labels.instance }} for more than 3 minutes"
+      summary: "Nginx issue with handling connections"
+ 
+  - alert: nginx_high_number_active_connections_
+    expr: nginx_connections_active{job="nginx-exporter"} > 3000
+    for: 3m
+    labels:
+      severity: critical
+    annotations:
+      description: "Critical: Nginx high number active connections on the host {{ $labels.instance }} for more than 3 minutes"
+      summary: "Nginx high number active connections"
