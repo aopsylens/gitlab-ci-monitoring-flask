@@ -9,9 +9,12 @@ services:
       - ./services/.env.db
     networks:
       - web-network
+    expose:
+      - 5432
     restart: always 
   web:
     build: ./services/web
+    entrypoint: ./wait-for.sh db
     command: gunicorn --bind 0.0.0.0:8000 wsgi:app
     volumes:
       - ./services/web/:/usr/src/app/
@@ -23,8 +26,6 @@ services:
       web-network:
           aliases:
               - web     
-    depends_on:
-      - db
     restart: always 
   nginx:
     build: ./services/nginx
@@ -33,8 +34,6 @@ services:
     networks:
       - web-network
       - nginx-status
-    depends_on:
-      - web
     restart: always
 
 volumes:
