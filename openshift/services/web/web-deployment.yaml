@@ -5,7 +5,12 @@ metadata:
   labels:
     name: web
 spec:
-  replicas: 1
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 0
   selector:
     matchLabels:
       app: web
@@ -17,3 +22,9 @@ spec:
       containers:
       - name: web
         image: sometestuser/web:COMMIT
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+             path: /
+             port: 8000
